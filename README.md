@@ -406,6 +406,31 @@ F:\0github\Learning-Computers\programming-language\python\pybind11  <br>
 &emsp;&emsp;而显示效果呢, 也确实是存在问题的. 刷新整个屏幕, 再重新画滑块, 显示效果就很不丝滑. 其实最一开始的想法是只刷新滑块位置, 不过由于是在自己的电脑上写的代码, 不是实验室中的电脑, 所以也没法调试. 最后只能刷新整个屏幕, 再显示滑块, 这种最简单的方案. <br>
 &emsp;&emsp;当然, 从这里学到了很多, 也有很多疑问, 比如像我们手机, 电脑, 这么丝滑地显示, 这种效果是如何实现的呢? <br>
 
+&emsp;&emsp;@author 巷北  
+&emsp;&emsp;@time 2025-12-25 19:04:44  
+
+&emsp;&emsp;刚才又认识到了深度`copy`的用处. 以前也知道深度`copy`, 但是解决了什么实际问题呢? 确实十分不清楚. 现在知道了底层硬件, 底层`os`运作原理之后呢, 一切变得很清晰了, 来看下面的代码吧. <br>
+
+~~~lua
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
+capabilities.textDocument.completion.completionItem.snippetSupport = false
+local lsp_data = require("data.plugin_data").lsp_data
+local servers = lsp_data
+
+for _, lsp in ipairs(servers) do
+  if lsp == "html" then
+    local caps = vim.deepcopy(capabilities)
+    caps.textDocument.completion.completionItem.snippetSupport = true
+    vim.lsp.config(lsp, { capabilities = caps })
+  else
+    vim.lsp.config(lsp, { capabilities = capabilities })
+  end
+end
+~~~
+
+&emsp;&emsp;本来在`html`之前, 上面所有的`capabilities.textDocument.completion.completionItem.snippetSupport`, 都是`false`. 但是配置`html`的`lsp`的时候呢, 这里必须为`true`. 没有办法, 我只好单独将`html`拿出来, 然后给其弄上`true`. <br>
+&emsp;&emsp;不过, 第一次的时候, 并没有用`deepcopy`, 而是遇到`html`后, 之前的变量, 变为`true`, 配置完后, 再变回`false`. 这样理论上, 也可以. 但是反馈却不对. 问了`ai`, 说需要用到深度`copy`, 我就明白了. 不论再怎么修改, 都是同一个变量, 地址相同. 虽然中间改了值, 但是, 后面又改了回去. 所以对于`html`, 其配置仍然为`false`. 而上面呢, 我采用了深度`copy`, 这样会在另一块地址赋值, 并且不会相互影响了. 修改过后, 反馈正常. 秒啊, 确实秒. <br>
+
 
 
 
